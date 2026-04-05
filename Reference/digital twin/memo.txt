@@ -1,0 +1,17 @@
+任意のフォルダを開く"agent-*"
+フォルダ内の"project_brief.txt"をgeminiと一緒に考えておく
+
+command+J
+
+Bash:
+export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
+
+Bash:
+claude
+
+Claudeが起動したら、以下のように入力します。
+「まず agent-teams-docs.md を読んで、エージェントチームの正しい使い方を理解して。その上で project_brief.txt の内容に従ってチームを編成し、議論を開始して。」
+
+
+終了したら以下で最終レポートを求めること
+「これまでの議論の結論、決定事項、および次に着手すべき未完了タスクを final_report.md にまとめて。これは、次回別のセッションで作業を再開する際の『ブリーフィング資料』として使うから、誰が読んでもこれまでの経緯がわかるようにして」
