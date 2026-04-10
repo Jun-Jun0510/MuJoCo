@@ -1,0 +1,75 @@
+<?xml version="1.0" ?>
+<!--
+  03_contact.xml
+  Section 3 (Contacts) 用モデル。
+  構成:
+    - 地面 (infinite plane, condim=3)
+    - ブロック 3 個: 高さ 0.15 m から落下 + 初速 vx=3 m/s
+        block_lo : friction=0.05 (氷のように滑る)
+        block_mid: friction=0.3  (適度に減速)
+        block_hi : friction=0.8  (すぐ止まる)
+    - ブロック同士は接触しない (contype/conaffinity ビットマスクで分離)
+  学ぶこと:
+    - 接触力の読み出し (data.ncon, data.contact, mj_contactForce)
+    - 着地時の衝撃力 (法線力スパイク)
+    - condim=3: 法線 + 接線 2 方向 (spin/roll なし)
+    - 滑り摩擦係数が減速度を決める: a ≈ μg
+
+  摩擦の混合規則 (MuJoCo):
+    - 2 つの geom の priority が等しい場合 → 要素ごとの max
+    - priority が異なる場合 → 高い方の値を使う
+    → 床の friction を 1.0 にして、ブロック側が小さい場合でも max で決まる
+    → 床の friction を 0.01 (ブロックより小さい値) に設定し、
+      max(floor, block) = block の値が効くようにする
+-->
+<mujoco model="contact_demo">
+  <option timestep="0.001" gravity="0 0 -9.81"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="160" elevation="-25"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0"
+             width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge"
+             rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8"
+             width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true"
+              texrepeat="5 5" reflectance="0.2"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 -2 3" dir="0 1 -1" directional="true"/>
+
+    <!-- 床: friction を小さくし、max(floor, block) = block 側が支配するように -->
+    <geom name="floor" type="plane" size="0 0 0.05" material="groundplane"
+          friction="0.01 0.005 0.001" contype="7" conaffinity="7" condim="3"/>
+
+    <!-- ブロック (低摩擦): 氷上を滑るイメージ -->
+    <body name="block_lo" pos="0 -0.25 0.15">
+      <freejoint/>
+      <geom name="block_lo" type="box" size="0.04 0.04 0.04" mass="0.5"
+            rgba="0.2 0.6 1.0 1" friction="0.05 0.005 0.001"
+            contype="1" conaffinity="1" condim="3"/>
+    </body>
+
+    <!-- ブロック (中摩擦): 木材程度 -->
+    <body name="block_mid" pos="0 0.0 0.15">
+      <freejoint/>
+      <geom name="block_mid" type="box" size="0.04 0.04 0.04" mass="0.5"
+            rgba="0.2 0.9 0.3 1" friction="0.3 0.005 0.001"
+            contype="2" conaffinity="2" condim="3"/>
+    </body>
+
+    <!-- ブロック (高摩擦): ゴム程度 -->
+    <body name="block_hi" pos="0 0.25 0.15">
+      <freejoint/>
+      <geom name="block_hi" type="box" size="0.04 0.04 0.04" mass="0.5"
+            rgba="0.9 0.3 0.2 1" friction="0.8 0.005 0.001"
+            contype="4" conaffinity="4" condim="3"/>
+    </body>
+  </worldbody>
+</mujoco>

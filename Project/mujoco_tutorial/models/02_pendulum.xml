@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<!--
+  02_pendulum.xml
+  Section 2 (Basic simulation) 用の単振子モデル。
+  構成:
+    - 地面 (infinite plane)
+    - 支点 (world 直下 pos="0 0 1")
+    - hinge joint (y 軸回り)  ← nq=1, nv=1
+    - アーム: capsule (長さ 0.5 m, 質量は geom 由来)
+    - 先端錘: sphere (半径 0.05 m, 質量 0.3 kg)
+  初期角は Python 側から qpos[0] を書き換えて設定する (ここではゼロ)。
+-->
+<mujoco model="pendulum">
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="RK4"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="90" elevation="-10"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge"
+             rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8"
+             width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 -2 2" dir="0 1 -1" directional="true"/>
+    <geom name="floor" type="plane" size="0 0 0.05" material="groundplane"/>
+
+    <!-- 支点となる固定ボディ (可視化用の小さい立方体, 接触無効) -->
+    <body name="pivot" pos="0 0 1">
+      <geom type="box" size="0.03 0.03 0.03" rgba="0.2 0.2 0.2 1"
+            contype="0" conaffinity="0"/>
+
+      <!-- ヒンジ関節付きアーム (振子なので接触判定は不要) -->
+      <body name="arm" pos="0 0 0">
+        <joint name="hinge" type="hinge" axis="0 1 0" damping="0.001"/>
+        <geom name="arm_shaft" type="capsule" fromto="0 0 0 0 0 -0.5"
+              size="0.02" rgba="0.3 0.6 0.9 1" mass="0.05"
+              contype="0" conaffinity="0"/>
+        <body name="tip" pos="0 0 -0.5">
+          <geom name="tip_mass" type="sphere" size="0.05" rgba="0.9 0.3 0.3 1" mass="0.3"
+                contype="0" conaffinity="0"/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

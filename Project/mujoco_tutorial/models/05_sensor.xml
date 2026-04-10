@@ -1,0 +1,61 @@
+<?xml version="1.0" ?>
+<!--
+  05_sensor.xml
+  Section 5 (Sensors) 用モデル。
+  構成:
+    - Section 4 と同じ水平アーム (hinge + motor)
+    - sensor 要素を追加: jointpos, jointvel, actuatorfrc, framepos, framelinvel
+  学ぶこと:
+    - <sensor> の各タイプと data.sensordata の対応
+    - センサ名 → ID → sensordata のインデックス
+    - Env の observation 設計に使うセンサの選び方
+-->
+<mujoco model="sensor_demo">
+  <option timestep="0.001" gravity="0 0 -9.81"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="90" elevation="-10"/>
+  </visual>
+
+  <worldbody>
+    <body name="pivot" pos="0 0 0.5">
+      <geom type="box" size="0.02 0.02 0.02" rgba="0.3 0.3 0.3 1"
+            contype="0" conaffinity="0"/>
+
+      <body name="arm">
+        <joint name="hinge" type="hinge" axis="0 1 0" damping="0.01"/>
+        <geom type="capsule" fromto="0 0 0 0.3 0 0" size="0.015"
+              rgba="0.4 0.6 0.8 1" mass="0.05"
+              contype="0" conaffinity="0"/>
+        <body name="tip" pos="0.3 0 0">
+          <geom type="sphere" size="0.03" rgba="0.9 0.4 0.2 1"
+                mass="1.0" contype="0" conaffinity="0"/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <motor name="torque" joint="hinge" gear="1.0"
+           ctrllimited="true" ctrlrange="-10 10"/>
+  </actuator>
+
+  <sensor>
+    <!-- 関節角度 [rad] (= data.qpos[jnt_qposadr]) -->
+    <jointpos name="s_angle" joint="hinge"/>
+
+    <!-- 関節角速度 [rad/s] (= data.qvel[jnt_dofadr]) -->
+    <jointvel name="s_velocity" joint="hinge"/>
+
+    <!-- アクチュエータ出力 [N·m] (= data.actuator_force[act_id]) -->
+    <actuatorfrc name="s_torque" actuator="torque"/>
+
+    <!-- 先端質量の世界座標 [x, y, z] (3 次元) -->
+    <framepos name="s_tip_pos" objtype="body" objname="tip"/>
+
+    <!-- 先端質量の世界線速度 [vx, vy, vz] (3 次元) -->
+    <framelinvel name="s_tip_vel" objtype="body" objname="tip"/>
+  </sensor>
+</mujoco>
